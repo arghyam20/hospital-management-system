@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doctor-service
+  labels:
+    app: doctor-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: doctor-service
+  template:
+    metadata:
+      labels:
+        app: doctor-service
+    spec:
+      containers:
+      - name: doctor-service
+        image: hospital-management-system/doctor-service:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 3003
+        envFrom:
+        - configMapRef:
+            name: hms-config
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secrets
+              key: DOCTOR_DB_URL
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doctor-service
+spec:
+  selector:
+    app: doctor-service
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3003
