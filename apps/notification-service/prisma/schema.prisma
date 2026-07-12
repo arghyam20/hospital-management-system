@@ -1,0 +1,33 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   // Target user ID (Patient, Doctor, etc.)
+  type      String   // EMAIL, SMS, PUSH
+  subject   String?
+  content   String   @db.Text
+  status    String   @default("PENDING") // PENDING, SENT, FAILED
+  error     String?  @db.Text
+  sentAt    DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model Template {
+  id        String   @id @default(uuid())
+  name      String   @unique // e.g., 'APPOINTMENT_BOOKED', 'WELCOME_EMAIL'
+  type      String   // EMAIL, SMS
+  subject   String?
+  body      String   @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

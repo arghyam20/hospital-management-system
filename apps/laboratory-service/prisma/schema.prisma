@@ -1,0 +1,67 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model TestType {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  price       Float
+  tests       Test[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Test {
+  id            String   @id @default(uuid())
+  patientId     String
+  doctorId      String
+  testTypeId    String
+  testType      TestType @relation(fields: [testTypeId], references: [id])
+  status        String   @default("PENDING") // PENDING, SAMPLE_COLLECTED, IN_PROGRESS, COMPLETED, CANCELLED
+  results       Result?
+  samples       Sample[]
+  reports       Report[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Sample {
+  id            String   @id @default(uuid())
+  testId        String
+  test          Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  type          String   // BLOOD, URINE, TISSUE, SALIVA
+  collectedBy   String   // Technician ID
+  collectedDate DateTime @default(now())
+  status        String   @default("COLLECTED") // COLLECTED, PROCESSING, ANALYZED, DISCARDED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Result {
+  id            String   @id @default(uuid())
+  testId        String   @unique
+  test          Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  findings      String   // Could be JSON string or text
+  conclusion    String
+  analyzedBy    String   // Pathologist ID
+  analyzedDate  DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Report {
+  id            String   @id @default(uuid())
+  testId        String
+  test          Test     @relation(fields: [testId], references: [id], onDelete: Cascade)
+  fileUrl       String   // URL to PDF or document in blob storage
+  generatedBy   String
+  generatedDate DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}

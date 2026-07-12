@@ -1,0 +1,71 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Appointment {
+  id          String   @id @default(uuid())
+  patientId   String
+  doctorId    String
+  date        DateTime
+  startTime   String
+  endTime     String
+  status      String   @default("SCHEDULED") // SCHEDULED, CONFIRMED, COMPLETED, CANCELLED, NO_SHOW
+  type        String   @default("CONSULTATION") // CONSULTATION, FOLLOW_UP, PROCEDURE
+  notes       String?
+  visits      Visit[]
+  bookings    Booking?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Visit {
+  id            String      @id @default(uuid())
+  appointmentId String
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  checkInTime   DateTime
+  checkOutTime  DateTime?
+  vitalSigns    String?     // e.g. JSON string or simple notes
+  symptoms      String?
+  diagnosis     String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}
+
+model Queue {
+  id            String   @id @default(uuid())
+  departmentId  String
+  doctorId      String
+  patientId     String
+  status        String   @default("WAITING") // WAITING, IN_PROGRESS, SERVED
+  queueNumber   Int
+  estimatedTime DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Slot {
+  id          String   @id @default(uuid())
+  doctorId    String
+  date        DateTime
+  startTime   String
+  endTime     String
+  isAvailable Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Booking {
+  id            String      @id @default(uuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  bookingDate   DateTime    @default(now())
+  source        String      @default("ONLINE") // ONLINE, RECEPTION, PHONE
+  status        String      @default("CONFIRMED")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+}

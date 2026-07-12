@@ -1,0 +1,21 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String   // e.g., USER_LOGIN, APPOINTMENT_BOOKED
+  entityType  String   // e.g., User, Appointment, Patient
+  entityId    String   // UUID of the entity modified
+  userId      String?  // UUID of the user who performed the action (if available)
+  details     String   @db.Text // JSON payload of the change
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([userId])
+}
